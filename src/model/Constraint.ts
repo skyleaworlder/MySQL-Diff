@@ -5,13 +5,13 @@ import { ConstraintType, ReferenceAction, ReferenceOption } from "@/model/Enum";
  * 并不直接使用。
  */
 export class BaseConstraint {
-    constraint_name: String;
-    constraint_type: ConstraintType;
+  constraint_name: String;
+  constraint_type: ConstraintType;
 
-    constructor(constraint_name: String, constraint_type: ConstraintType) {
-        this.constraint_type = constraint_type;
-        this.constraint_name = constraint_name;
-    }
+  constructor(constraint_name: String, constraint_type: ConstraintType) {
+    this.constraint_type = constraint_type;
+    this.constraint_name = constraint_name;
+  }
 }
 
 
@@ -23,12 +23,12 @@ export class BaseConstraint {
  * @param chk_constraint_conditions 约束条件
  */
 export class CheckConstraint extends BaseConstraint {
-    chk_constraint_conditions: String;
+  chk_constraint_conditions: String;
 
-    constructor(constraint_name: String, chk_constraint_conditions: String) {
-        super(constraint_name, ConstraintType.CHECK_CONSTRAINT);
-        this.chk_constraint_conditions = chk_constraint_conditions;
-    }
+  constructor(constraint_name: String, chk_constraint_conditions: String) {
+    super(constraint_name, ConstraintType.CHECK_CONSTRAINT);
+    this.chk_constraint_conditions = chk_constraint_conditions;
+  }
 }
 
 
@@ -43,22 +43,22 @@ export class CheckConstraint extends BaseConstraint {
  * @param fk_constraint_option
  */
 export class ForeignKeyConstraint extends BaseConstraint {
-    fk_constraint_cols: Array<String>;
-    fk_constraint_refer_tbl: String;
-    fk_constraint_refer_cols: Array<String>;
-    fk_constraint_action: String;
-    fk_constraint_option: String;
+  fk_constraint_cols: Array<String>;
+  fk_constraint_refer_tbl: String;
+  fk_constraint_refer_cols: Array<String>;
+  fk_constraint_action: String;
+  fk_constraint_option: String;
 
-    constructor(
-        constraint_name: String, fk_constraint_cols: Array<String>,
-        fk_constraint_refer_tbl: String, fk_constraint_refer_cols: Array<String>,
-        fk_constraint_action = ReferenceAction.EMPTY, fk_constraint_option = ReferenceOption.EMPTY
-    ) {
-        super(constraint_name, ConstraintType.FOREIGN_KEY_CONSTRAINT);
-        this.fk_constraint_cols = fk_constraint_cols;
-        this.fk_constraint_refer_tbl = fk_constraint_refer_tbl;
-        this.fk_constraint_refer_cols = fk_constraint_refer_cols;
-        this.fk_constraint_action = fk_constraint_action;
-        this.fk_constraint_option = fk_constraint_option;
-    }
+  constructor(
+    constraint_name: String, fk_constraint_cols: Array<String>,
+    fk_constraint_refer_tbl: String, fk_constraint_refer_cols: Array<String>,
+    fk_constraint_action = ReferenceAction.EMPTY, fk_constraint_option = ReferenceOption.EMPTY
+  ) {
+    super(constraint_name, ConstraintType.FOREIGN_KEY_CONSTRAINT);
+    this.fk_constraint_cols = fk_constraint_cols;
+    this.fk_constraint_refer_tbl = fk_constraint_refer_tbl;
+    this.fk_constraint_refer_cols = fk_constraint_refer_cols;
+    this.fk_constraint_action = fk_constraint_action;
+    this.fk_constraint_option = fk_constraint_option;
+  }
 }
