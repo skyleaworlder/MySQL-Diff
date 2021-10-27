@@ -28,12 +28,15 @@ CREATE TABLE `Persons`
 CREATE TABLE Persons
 (
     -- like above
+    PRIMARY KEY `PersonID`,
     UNIQUE KEY `id_last_name` (`PersonID`, `LastName`) USING BTREE,
-    FOREIGN KEY `HashID` REFERENCES `Hash` (`HashID`)
+    KEY `HashID`
 );
 ```
 
-* Index Type
+All Index or Keys are below Data Column Definitions.
+
+* Index Type: PRIMARY / UNIQUE / KEY
 * Index Name
 * Index Options (Polymorphism)
 
@@ -43,13 +46,16 @@ CREATE TABLE Persons
 CREATE TABLE Persons
 (
     -- like above
-    CONSTRAINT `ck_id` CHECK (`PersonID` > 0)
+    CONSTRAINT `ck_id` CHECK (`PersonID` > 0),
+    CONSTRAINT `Persons_ibfk_1` FOREIGN KEY (`HashID`) REFERENCES `Hash` (`id`) ON DELETE CASCADE
 );
 ```
+
+All Constraints are below Data Column Definitions: Check-Constraint and Foreign-Key-Constraint.
 
 * Constraint Name
 * Constraint Condition
 
-### iv. TABLE OPTIONS
+### iv. TABLE OPTIONS (ABANDON)
 
 Other Options Like "ENGINE", "CHARACTER SET"...
