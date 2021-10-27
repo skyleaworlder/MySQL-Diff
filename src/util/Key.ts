@@ -1,7 +1,14 @@
 import { KeyType } from "@/model/Enum";
+import { KeyOptions } from "@/model/Key";
 import { getStrSurroundWith } from "@/util/Common";
 
-export function fetchKeyType(ddl: String): KeyType {
+/**
+ * fetchKeyType
+ * 获取键的类型
+ * @param ddl 是定义键的那一行
+ * @returns 要么返回键的类型，要么返回一个 null 来表示这一行根本没有定义键
+ */
+export function fetchKeyType(ddl: String): KeyType | null {
   const ddl_upper_case = ddl.toUpperCase()
   if (ddl_upper_case.indexOf("PRIMARY KEY") >= 0) {
     return KeyType.PRIMARY_KEY;
@@ -10,8 +17,8 @@ export function fetchKeyType(ddl: String): KeyType {
   } else if (ddl_upper_case.indexOf("KEY") >= 0) {
     return KeyType.NORMAL_KEY;
   } else {
-    console.error("fetchKeyType error: not a key");
-    return KeyType.NORMAL_KEY;
+    console.error("fetchKeyType error: ddl is not going to define a key");
+    return null;
   }
 }
 
@@ -32,6 +39,12 @@ export function fetchKeyName(ddl: String, key_type: KeyType): String {
 }
 
 
+/**
+ * fetchKeyPart
+ * 获取键下辖的字段名
+ * @param ddl 是定义键的那一行
+ * @returns 键下辖的表中 columns 的字段名
+ */
 export function fetchKeyPart(ddl: String): Array<String> {
   const key_part_beg: number = ddl.indexOf("(");
   // 如果 key_part_beg 小于 0，说明这一条 ddl 有问题。
@@ -52,4 +65,25 @@ export function fetchKeyPart(ddl: String): Array<String> {
     }
   }
   return key_part;
+}
+
+
+/**
+ * unmarshalKeyOptions
+ * 获取 Key Options（现在只有 COMMENT）
+ * @param ddl 是定义键的那一行
+ * @returns 键的 options
+ */
+export function unmarshalKeyOptions(ddl: String): KeyOptions {
+  let comment_beg: number = ddl.toUpperCase().indexOf("COMMENT");
+  if (comment_beg < 0) {
+    return new KeyOptions();
+  }
+  // comment filled.
+  let [comment_content, , , out_of_bound] = getStrSurroundWith(ddl, "'", comment_beg);
+  if (out_of_bound) {
+    console.error("unmarshalKeyOptions error: no content after 'COMMENT', error!!");
+    return new KeyOptions();
+  }
+  return new KeyOptions(comment_content);
 }
