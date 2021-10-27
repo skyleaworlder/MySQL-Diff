@@ -46,18 +46,27 @@ export class ForeignKeyConstraint extends BaseConstraint {
   fk_constraint_cols: Array<String>;
   fk_constraint_refer_tbl: String;
   fk_constraint_refer_cols: Array<String>;
-  fk_constraint_action: String;
-  fk_constraint_option: String;
+  fk_constraint_on: Array<FkConstraintOnStatement>;
 
   constructor(
     constraint_name: String, fk_constraint_cols: Array<String>,
     fk_constraint_refer_tbl: String, fk_constraint_refer_cols: Array<String>,
-    fk_constraint_action = ReferenceAction.EMPTY, fk_constraint_option = ReferenceOption.EMPTY
+    fk_constraint_on: Array<FkConstraintOnStatement>
   ) {
     super(constraint_name, ConstraintType.FOREIGN_KEY_CONSTRAINT);
     this.fk_constraint_cols = fk_constraint_cols;
     this.fk_constraint_refer_tbl = fk_constraint_refer_tbl;
     this.fk_constraint_refer_cols = fk_constraint_refer_cols;
+    this.fk_constraint_on = fk_constraint_on;
+  }
+}
+
+
+export class FkConstraintOnStatement {
+  fk_constraint_action: ReferenceAction;
+  fk_constraint_option: ReferenceOption;
+
+  constructor(fk_constraint_action = ReferenceAction.EMPTY, fk_constraint_option = ReferenceOption.EMPTY) {
     this.fk_constraint_action = fk_constraint_action;
     this.fk_constraint_option = fk_constraint_option;
   }
