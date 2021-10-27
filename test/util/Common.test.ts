@@ -1,4 +1,4 @@
-import { getStrSurroundWith } from "@/util/Common";
+import { getItems, getStrSurroundWith } from "@/util/Common";
 
 test("fetch the first name from ddl sentence", () => {
   let res: String, beg: number, end: number, out_of_bound: boolean;
@@ -29,4 +29,17 @@ test("fetch the first name from ddl sentence", () => {
     "  UNIQUE KEY `name (name, c_id),", "`", 0
   );
   expect(res).toBe("");
+})
+
+test("getItems", () => {
+  let res: Array<String>;
+  let test_case = [
+    {input: "UNIQUE KEY (`c_id`, `k_id`)", expect: ["c_id", "k_id"]},
+    {input: "UNIQUE KEY (`c_id`, `k_id)", expect: ["c_id"]},
+    {input: "CONSTRAINT `test_index_ibfk_1` FOREIGN KEY (`c_id`) REFERENCES `test_constraint` (`id`) ON DELETE CASCADE", expect: ["test_index_ibfk_1", "c_id", "test_constraint", "id"]}
+  ]
+  test_case.forEach(t_case => {
+    res = getItems(t_case.input);
+    expect(res).toEqual(t_case.expect);
+  })
 })
