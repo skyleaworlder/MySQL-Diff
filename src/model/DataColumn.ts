@@ -1,5 +1,4 @@
-import { CheckConstraint } from "@/model/CheckConstraint";
-import { Reference } from "@/model/Reference";
+import { StorageType } from "@/model/Enum";
 
 export class DataColumn {
     col_name: String;
@@ -27,21 +26,10 @@ export class DataColumnOptions {
     collate: String;
     storage: String;
 
-    unique_key: Boolean;
-    primary_key: Boolean;
-
-    constraint: CheckConstraint;
-    reference: Reference;
-
     constructor(
-        not_null: Boolean, default_val: any,
-        visible: Boolean, auto_increment: Boolean,
-        comment: String, collate: String,
-        storage: String,
-
-        unique_key: Boolean, primary_key: Boolean,
-        constraint: CheckConstraint,
-        reference: Reference
+        not_null: Boolean = false, default_val: any = null, visible: Boolean = true, 
+        auto_increment: Boolean = false, comment: String = "", collate: String = "",
+        storage = StorageType.EMPTY
     ) {
         this.not_null = not_null;
         this.default_val = default_val;
@@ -50,11 +38,5 @@ export class DataColumnOptions {
         this.comment = comment;
         this.collate = collate;
         this.storage = storage;
-
-        this.unique_key = unique_key;
-        this.primary_key = primary_key;
-
-        this.constraint = constraint;
-        this.reference = reference;
     }
 };

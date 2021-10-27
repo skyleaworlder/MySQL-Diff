@@ -1,18 +1,15 @@
 import { DataColumn } from "@/model/DataColumn";
-import { Reference } from "@/model/Reference";
+import { BaseConstraint } from "@/model/Constraint";
 import { BaseKey } from "@/model/Key";
 
 export class Table {
     columns: Array<DataColumn>;
     keys: Array<BaseKey>;
-    reference: Reference;
+    constraints: Array<BaseConstraint>;
 
-    constructor(
-        columns: Array<DataColumn>, keys: Array<BaseKey>,
-        reference: Reference
-    ) {
+    constructor(columns: Array<DataColumn>, keys: Array<BaseKey>, constraints: Array<BaseConstraint>) {
         this.columns = columns;
         this.keys = keys;
-        this.reference = reference;
+        this.constraints = constraints;
     }
 }

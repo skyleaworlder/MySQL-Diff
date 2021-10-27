@@ -1,75 +1,50 @@
-import { Reference } from "@/model/Reference";
+import { KeyType, IndexDS } from "@/model/Enum";
 
 export class BaseKey {
     key_type: String;
-    key_name: String;
     key_part: Array<String>;
+    index_ds: IndexDS;
+    key_options: KeyOptions;
 
-    constructor(
-        key_type: String, key_name: String,
-        key_part: Array<String>
-    ) {
+    constructor(key_type: String, key_part: Array<String>, index_ds = IndexDS.BTREE, key_options: KeyOptions) {
         this.key_type = key_type;
-        this.key_name = key_name;
         this.key_part = key_part;
+        this.index_ds = index_ds;
+        this.key_options = key_options;
     }
 }
 
 
-export class ForeignKey extends BaseKey {
-
-    reference: Reference;
-
-    constructor(
-        key_name: String, key_part: Array<String>,
-        reference: Reference
-    ) {
-        // here, key_part is from another table.
-        super("FOREIGN KEY", key_name, key_part);
-        this.reference = reference;
+export class PrimaryKey extends BaseKey {
+    constructor(key_part: Array<String>, index_ds = IndexDS.BTREE, key_options: KeyOptions) {
+        super(KeyType.PRIMARY_KEY, key_part, index_ds, key_options);
     }
 }
 
 
-export class NotForeignKey extends BaseKey {
+export class UniqueKey extends BaseKey {
+    key_name: String;
 
-    is_btree: Boolean;
-
-    constructor(
-        key_type: String, key_name: String,
-        key_part: Array<String>, is_btree: Boolean
-    ) {
-        super(key_type, key_name, key_part);
-        this.is_btree = is_btree;
+    constructor(key_name: String, key_part: Array<String>, index_ds = IndexDS.BTREE, key_options: KeyOptions) {
+        super(KeyType.UNIQUE_KEY, key_part, index_ds, key_options);
+        this.key_name = key_name;
     }
 }
 
 
-export class PrimaryKey extends NotForeignKey {
-    constructor(
-        key_name: String, key_part: Array<String>,
-        is_btree: Boolean
-    ) {
-        super("PRIMARY KEY", key_name, key_part, is_btree);
+export class NormalKey extends BaseKey {
+    key_name: String;
+
+    constructor(key_name: String, key_part: Array<String>, index_ds = IndexDS.BTREE, key_options: KeyOptions) {
+        super(KeyType.NORMAL_KEY, key_part, index_ds, key_options);
+        this.key_name = key_name;
     }
 }
 
+export class KeyOptions {
+    comment: String;
 
-export class UniqueKey extends NotForeignKey {
-    constructor(
-        key_name: String, key_part: Array<String>,
-        is_btree: Boolean
-    ) {
-        super("UNIQUE KEY", key_name, key_part, is_btree);
-    }
-}
-
-
-export class NormalKey extends NotForeignKey {
-    constructor(
-        key_name: String, key_part: Array<String>,
-        is_btree: Boolean
-    ) {
-        super("KEY", key_name, key_part, is_btree);
+    constructor(comment: String = "") {
+        this.comment = comment;
     }
 }
