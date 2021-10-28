@@ -18,18 +18,14 @@ export function processTable(table_ddl: Array<String>): Table {
 
   for (let index = 0; index < table_ddl.length; index++) {
     const line = table_ddl[index];
+    if (line.startsWith(")") && line.endsWith(";")) {
+      break;
+    }
 
     // about table name
     const create_table_pos = line.toUpperCase().indexOf("CREATE TABLE")
-    if (create_table_pos > 0) {
+    if (create_table_pos >= 0) {
       table_name = fetchTableName(line);
-      continue;
-    }
-
-    // about key type
-    const key_type = fetchKeyType(line);
-    if (key_type != null) {
-      keys.push(processKey(line, key_type));
       continue;
     }
 
@@ -37,6 +33,13 @@ export function processTable(table_ddl: Array<String>): Table {
     const constraint_type = fetchConstraintType(line);
     if (constraint_type != null) {
       constraints.push(processConstraint(line, constraint_type));
+      continue;
+    }
+
+    // about key type
+    const key_type = fetchKeyType(line);
+    if (key_type != null) {
+      keys.push(processKey(line, key_type));
       continue;
     }
 
