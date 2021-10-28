@@ -59,3 +59,19 @@ All Constraints are below Data Column Definitions: Check-Constraint and Foreign-
 ### iv. TABLE OPTIONS (ABANDON)
 
 Other Options Like "ENGINE", "CHARACTER SET"...
+
+## 2. Differ
+
+Now I have 2 Table/Trigger/View(s).
+
+## 3. ALTER
+
+### i. ALTER TABLE
+
+Firstly, Table Name is Needed Anyway.
+
+#### a. COLUMN
+
+#### b. KEY
+
+#### c. CONSTRAINT
