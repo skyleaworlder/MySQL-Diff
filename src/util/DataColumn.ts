@@ -12,6 +12,15 @@ export function fetchDataColumnName(str: String): String {
 }
 
 
+export function fetchDataColumnType(words: Array<String>): String {
+  // 比较拉垮的处理。
+  if (words[2] == "unsigned") {
+    return words[1] + " " + words[2];
+  }
+  return words[1];
+}
+
+
 export function fetchDataColumnOptions(words: Array<String>): DataColumnOptions {
   let data_col_options = new DataColumnOptions();
   let pos_arr: Array<number> = [2];
@@ -49,7 +58,7 @@ export function fetchDataColumnOptions(words: Array<String>): DataColumnOptions 
     data_col_options.default_val = words[default_val_beg + 1];
   }
   // AUTO_INCREMENT
-  const auto_increment_pos = words.indexOf("AUTO_INCRAMENT");
+  const auto_increment_pos = words.indexOf("AUTO_INCREMENT");
   if (auto_increment_pos >= 0) {
     data_col_options.auto_increment = true;
   }
@@ -63,11 +72,13 @@ export function fetchDataColumnOptions(words: Array<String>): DataColumnOptions 
   const comment_beg = words.indexOf("COMMENT", Math.max(...pos_arr));
   pos_arr.push(comment_beg);
   if (comment_beg >= 0) {
-    const [content, success] = removeArmor(words[comment_beg + 1], "'", "'");
+    // COMMENT 作为每一行最后的关键字，其后值左为 "'"，右为 "',"
+    const [content, success] = removeArmor(words[comment_beg + 1], "'", "',");
     if (!success) {
       console.error("fetchDataColumnOptions error: no content behind 'COMMENT', error!!!");
       return data_col_options;
     }
+    data_col_options.comment = content;
   }
   return data_col_options;
 }
