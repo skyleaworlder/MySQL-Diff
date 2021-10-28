@@ -14,7 +14,7 @@ export function fetchDataColumnName(str: String): String {
 
 export function fetchDataColumnType(words: Array<String>): String {
   // 比较拉垮的处理。
-  if (words[2] == "unsigned") {
+  if (words[2] == "unsigned" || words[2] == "unsigned,") {
     return words[1] + " " + words[2];
   }
   return words[1];
@@ -34,7 +34,7 @@ export function fetchDataColumnOptions(words: Array<String>): DataColumnOptions 
   // NOT NULL
   const not_null_beg = words.indexOf("NOT", Math.max(...pos_arr));
   pos_arr.push(not_null_beg);
-  if (not_null_beg < 0) {;} else if (words[not_null_beg + 1] == "NULL") {
+  if (not_null_beg < 0) {;} else if (words[not_null_beg + 1] == "NULL" || words[not_null_beg + 1] == "NULL,") {
     data_col_options.not_null = true;
   } else {
     console.error("fetchDataColumnOptions error: no 'NULL' behind the 'NOT', error!!!");
@@ -43,9 +43,9 @@ export function fetchDataColumnOptions(words: Array<String>): DataColumnOptions 
   // STORAGE
   const storage_beg = words.indexOf("STORAGE", Math.max(...pos_arr));
   pos_arr.push(storage_beg);
-  if (storage_beg < 0) {;} else if (words[storage_beg + 1] == "DISK") {
+  if (storage_beg < 0) {;} else if (words[storage_beg + 1] == "DISK" || words[storage_beg + 1] == "DISK,") {
     data_col_options.storage = StorageType.DISK;
-  } else if (words[storage_beg + 1] == "MEMORY") {
+  } else if (words[storage_beg + 1] == "MEMORY" || words[storage_beg + 1] == "MEMORY,") {
     data_col_options.storage = StorageType.MEMROY;
   } else {
     console.error("fetchDataColumnOptions error: no storage type behind the 'STORAGE'");
@@ -54,7 +54,7 @@ export function fetchDataColumnOptions(words: Array<String>): DataColumnOptions 
   // DEFAULT
   const default_val_beg = words.indexOf("DEFAULT", Math.max(...pos_arr));
   pos_arr.push(default_val_beg);
-  if (default_val_beg < 0) {;} else if (words[default_val_beg + 1] == "NULL") {;} else {
+  if (default_val_beg < 0) {;} else if (words[default_val_beg + 1] == "NULL" || words[default_val_beg + 1] == "NULL,") {;} else {
     data_col_options.default_val = words[default_val_beg + 1];
   }
   // AUTO_INCREMENT
