@@ -61,6 +61,14 @@ export function getItems(str: String, wrapper: string = "`"): Array<String> {
 }
 
 
+export function removeArmor(str: String, larmor: string, rarmor: string): [string, boolean] {
+  if (str.startsWith(larmor) && str.endsWith(rarmor)) {
+    return [str.slice(larmor.length, str.length - rarmor.length), true];
+  }
+  return [str.toString(), false];
+}
+
+
 function getStrSurroundWithAB(str: String, A: string, B: string, position: number): [string, number, number, boolean] {
   const beg: number = str.indexOf(A, position);
   // 如果找不到，那就返回空字符串和 -1。
@@ -74,3 +82,4 @@ function getStrSurroundWithAB(str: String, A: string, B: string, position: numbe
   }
   return [str.slice(beg + 1, end), beg, end, false];
 }
+

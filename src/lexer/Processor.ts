@@ -7,6 +7,8 @@ import { ConstraintType, IndexDS, KeyType } from "@/model/Enum";
 import { fetchTableName } from "@/util/Table";
 import { fetchKeyType, fetchKeyName, fetchKeyPart, unmarshalKeyOptions } from "@/util/Key";
 import { fetchConstraintConditions, fetchConstraintName, fetchConstraintType, fetchFkConstraintCols, fetchFkConstraintOn, fetchFkConstraintRefTblCols, fetchFkConstraintRefTblName } from "@/util/Constraint";
+import { removeArmor } from "@/util/Common";
+import { fetchDataColumnName, fetchDataColumnOptions } from "@/util/DataColumn";
 
 export function processTable(table_ddl: Array<String>): Table {
   let table_name: String = "";
@@ -38,10 +40,12 @@ export function processTable(table_ddl: Array<String>): Table {
       continue;
     }
 
-    // TODO: data column
+    // about data column
+    columns.push(processDataColumn(line));
   }
-  return new Table(table_name, [], [], []);
+  return new Table(table_name, columns, keys, constraints);
 }
+
 
 function processKey(ddl: String, key_type: KeyType | null): BaseKey {
   let key_name: String;
@@ -62,6 +66,7 @@ function processKey(ddl: String, key_type: KeyType | null): BaseKey {
   }
 }
 
+
 function processConstraint(ddl: String, constraint_type: ConstraintType): BaseConstraint {
   let constraint_name: String = fetchConstraintName(ddl);
   switch (constraint_type) {
@@ -81,4 +86,13 @@ function processConstraint(ddl: String, constraint_type: ConstraintType): BaseCo
       console.error("processConstraint error: unknown constraint type!");
       return new BaseConstraint("", ConstraintType.CHECK_CONSTRAINT);
   }
+}
+
+
+function processDataColumn(ddl: String): DataColumn {
+  let words: Array<String> = ddl.split(" ");
+  const data_col_name = fetchDataColumnName(words[0]);
+  const data_col_type = words[1];
+  const data_col_options = fetchDataColumnOptions(words);
+  return new DataColumn(data_col_name, data_col_type, data_col_options);
 }
