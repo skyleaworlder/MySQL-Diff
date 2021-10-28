@@ -17,7 +17,6 @@ export function fetchKeyType(ddl: String): KeyType | null {
   } else if (ddl_upper_case.indexOf("KEY") >= 0) {
     return KeyType.NORMAL_KEY;
   } else {
-    console.error("fetchKeyType error: ddl is not going to define a key");
     return null;
   }
 }
