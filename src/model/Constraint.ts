@@ -1,4 +1,22 @@
 import { ConstraintType, ReferenceAction, ReferenceOption } from "@/model/Enum";
+import { Appender } from "./Common";
+
+export class Constraints implements Appender<BaseConstraint> {
+  constraints: Map<String, BaseConstraint>;
+
+  constructor() {
+    this.constraints = new Map<String, BaseConstraint>();
+  }
+
+  /**
+   * append
+   * @param elem
+   */
+  public append(elem: BaseConstraint): void {
+    this.constraints.set(elem.constraint_name, elem);
+  }
+}
+
 
 /**
  * BaseConstraint 基类。

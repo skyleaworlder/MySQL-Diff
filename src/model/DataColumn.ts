@@ -1,4 +1,22 @@
 import { StorageType } from "@/model/Enum";
+import { Appender } from "./Common";
+
+export class DataColumns implements Appender<DataColumn> {
+  data_columns: Map<String, DataColumn>;
+
+  constructor() {
+    this.data_columns = new Map<String, DataColumn>();
+  }
+
+  /**
+   * append
+   * @param elem
+   */
+  public append(elem: DataColumn): void {
+    this.data_columns.set(elem.col_name, elem);
+  }
+}
+
 
 export class DataColumn {
   col_name: String;
@@ -11,7 +29,7 @@ export class DataColumn {
     this.col_data_type = col_data_type;
     this.col_options = col_options;
   }
-};
+}
 
 
 export class DataColumnOptions {
@@ -36,4 +54,4 @@ export class DataColumnOptions {
     this.collate = collate;
     this.storage = storage;
   }
-};
+}
