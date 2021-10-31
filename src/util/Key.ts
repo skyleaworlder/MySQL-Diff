@@ -1,5 +1,5 @@
 import { KeyType } from "@/model/Enum";
-import { KeyOptions } from "@/model/Key";
+import { KeyOptions, PrimaryKey } from "@/model/Key";
 import { getStrSurroundWith } from "@/util/Common";
 
 /**
@@ -85,4 +85,15 @@ export function unmarshalKeyOptions(ddl: String): KeyOptions {
     return new KeyOptions();
   }
   return new KeyOptions(comment_content);
+}
+
+
+/**
+ * composePrimaryKeyName
+ * 一般来说，主键是没有 name 的。
+ * 由于 Keys 中将主键作为元素，所以也需要生成一个 name 作为 Map 中的 key
+ * @param pk 主键
+ */
+export function composePrimaryKeyName(pk: PrimaryKey): string {
+  return (KeyType.PRIMARY_KEY + " " + pk.key_part.reduce((prev, cur) => (prev.toString() + cur)));
 }
