@@ -1,0 +1,47 @@
+{
+  "table": {
+    "column": {
+      "name": true,
+      "data_type": true,
+      "data_options": {
+        "not_null": true,
+        "default_val": true,
+        "visible": true,
+        "auto_increment": true,
+        "comment": true,
+        "collate": true,
+        "storage": true
+      }
+    },
+    "constraint": {
+      "name": true,
+      "type": true,
+      "check": {
+        "conditions": true
+      },
+      "foreign_key": {
+        "columns": true,
+        "refer_table": true,
+        "refer_table_columns": true,
+        "on": {
+          "action": true,
+          "option": true
+        }
+      }
+    },
+    "key": {
+      "type": true,
+      "part": true,
+      "index_ds": true,
+      "options": {
+        "comment": true
+      },
+      "primary_key": {},
+      "non_primary_key": {
+        "name": true,
+        "unique_key": {},
+        "normal_key": {}
+      }
+    }
+  }
+}
