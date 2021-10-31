@@ -18,7 +18,7 @@ export function processTable(table_ddl: Array<String>): Table {
 
   for (let index = 0; index < table_ddl.length; index++) {
     const line = table_ddl[index];
-    if (line.startsWith(")") && line.endsWith(";")) {
+    if (line.trimLeft().startsWith(")") && line.trimRight().endsWith(";")) {
       break;
     }
 
@@ -32,14 +32,14 @@ export function processTable(table_ddl: Array<String>): Table {
     // about constraint
     const constraint_type = fetchConstraintType(line);
     if (constraint_type != null) {
-      constraints.push(processConstraint(line, constraint_type));
+      constraints.push(processConstraint(line, constraint_type) as BaseConstraint);
       continue;
     }
 
     // about key type
     const key_type = fetchKeyType(line);
     if (key_type != null) {
-      keys.push(processKey(line, key_type));
+      keys.push(processKey(line, key_type) as BaseKey);
       continue;
     }
 
@@ -50,7 +50,7 @@ export function processTable(table_ddl: Array<String>): Table {
 }
 
 
-function processKey(ddl: String, key_type: KeyType | null): BaseKey {
+function processKey(ddl: String, key_type: KeyType | null): BaseKey | null {
   let key_name: String;
   let key_part: Array<String> = fetchKeyPart(ddl);
   let key_options: KeyOptions = unmarshalKeyOptions(ddl);
@@ -65,12 +65,12 @@ function processKey(ddl: String, key_type: KeyType | null): BaseKey {
       return new NormalKey(key_name, key_part, IndexDS.BTREE, key_options);
     default:
       console.error("processKey error: unknown key type!");
-      return new BaseKey(KeyType.NORMAL_KEY, [], undefined, new KeyOptions());
+      return null;
   }
 }
 
 
-function processConstraint(ddl: String, constraint_type: ConstraintType): BaseConstraint {
+function processConstraint(ddl: String, constraint_type: ConstraintType): BaseConstraint | null {
   let constraint_name: String = fetchConstraintName(ddl);
   switch (constraint_type) {
     case ConstraintType.CHECK_CONSTRAINT:
@@ -87,7 +87,7 @@ function processConstraint(ddl: String, constraint_type: ConstraintType): BaseCo
       );
     default:
       console.error("processConstraint error: unknown constraint type!");
-      return new BaseConstraint("", ConstraintType.CHECK_CONSTRAINT);
+      return null;
   }
 }
 
