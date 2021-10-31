@@ -34,6 +34,14 @@ export interface Equaler<T> {
  * 最后 DDL 语句的输出。
  */
 export interface Transformer<T> {
-  transform(difference: Difference<Array<T>>): Array<String>;
+  transform(tbl_name: String, differences: Array<Difference<T>>): Array<String>;
 }
 
+
+/**
+ * Serializer<T>
+ * DDL 还原。
+ */
+export interface Serializer {
+  serialize(): string;
+}
