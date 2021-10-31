@@ -4,7 +4,7 @@ import { Difference } from "@/model/Difference";
 import { table } from "../../mysql-diff-settings.json";
 import { equalArray } from "@/util/Common";
 
-export class Constraints implements Appender<BaseConstraint>, Comparer<Constraints> {
+export class Constraints implements Appender<BaseConstraint>, Comparer<Constraints, BaseConstraint> {
   constraints: Map<String, BaseConstraint>;
 
   constructor() {
