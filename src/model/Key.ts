@@ -1,11 +1,11 @@
 import { KeyType, IndexDS, DifferenceType } from "@/model/Enum";
-import { Appender, Comparer, Equaler } from "@/model/Common";
+import { Appender, Comparer, Equaler, Serializer, Transformer } from "@/model/Common";
 import { table } from "../../mysql-diff-settings.json";
 import { equalArray, equalStringArrayStrict } from "@/util/Common";
 import { Difference } from "@/model/Difference";
-import { composePrimaryKeyName } from "@/util/Key";
+import { composeKeyPart, composePrimaryKeyName } from "@/util/Key";
 
-export class Keys implements Appender<BaseKey>, Comparer<Keys, BaseKey> {
+export class Keys implements Appender<BaseKey>, Comparer<Keys, BaseKey>, Transformer<BaseKey> {
   keys: Map<String, BaseKey>;
 
   constructor() {
@@ -23,6 +23,11 @@ export class Keys implements Appender<BaseKey>, Comparer<Keys, BaseKey> {
     this.keys.set((elem as NonPrimaryKey).key_name, elem);
   }
 
+  /**
+   * compareTo is to implement interface Comparer
+   * @param that 另外一个 Keys instance
+   * @returns 两个 Keys 的差异
+   */
   public compareTo(that: Keys): Array<Difference<BaseKey>> {
     let keys_have_diff: Array<Difference<BaseKey>> = [];
     let this_key_used: Array<String> = [];
@@ -81,18 +86,54 @@ export class Keys implements Appender<BaseKey>, Comparer<Keys, BaseKey> {
       if (that_key_used.indexOf(key_name) >= 0) {
         return;
       }
-      // PRIMARY KEY / UNIQUE KEY / NORMAL KEY 的 DROP
-      keys_have_diff.push(new Difference<BaseKey>(DifferenceType.KEY_DROP, that_key, null));
+      // PRIMARY KEY / UNIQUE KEY / NORMAL KEY 的 ADD
+      keys_have_diff.push(new Difference<BaseKey>(DifferenceType.KEY_ADD, that_key, null));
     })
 
     this.keys.forEach((this_key, key_name) => {
       if (this_key_used.indexOf(key_name) >= 0) {
         return;
       }
-      // PRIMARY KEY / UNIQUE KEY / NORMAL KEY 的 ADD
-      keys_have_diff.push(new Difference<BaseKey>(DifferenceType.KEY_ADD, null, this_key));
+      // PRIMARY KEY / UNIQUE KEY / NORMAL KEY 的 DROP
+      keys_have_diff.push(new Difference<BaseKey>(DifferenceType.KEY_DROP, null, this_key));
     })
     return keys_have_diff;
+  }
+
+  public transform(tbl_name: String, differences: Array<Difference<BaseKey>>): Array<String> {
+    let trans_ddl: Array<String> = [];
+    differences.forEach(diff => {
+      switch (diff.type) {
+        case DifferenceType.KEY_ADD:
+          trans_ddl.push(`ALTER TABLE \`${tbl_name}\` ADD ${diff.tar?.serialize()};`);
+          break;
+        case DifferenceType.KEY_DROP:
+          if ((diff.src as BaseKey).key_type == KeyType.PRIMARY_KEY) {
+            trans_ddl.push(`ALTER TABLE \`${tbl_name}\` DROP ${KeyType.PRIMARY_KEY};`);
+          } else {
+            trans_ddl.push(`ALTER TABLE \`${tbl_name}\` DROP \`${(diff.src as NonPrimaryKey).key_name}\`;`)
+          }
+          break;
+        case DifferenceType.KEY_MODIFY:
+          trans_ddl.push(
+            `ALTER TABLE \`${tbl_name}\` DROP KEY \`${(diff.src as NonPrimaryKey).key_name}\`,`
+            + ` ADD ${(diff.tar as NonPrimaryKey).serialize()};`
+          );
+          break;
+        case DifferenceType.KEY_RENAME:
+          trans_ddl.push(
+            `ALTER TABLE \`${tbl_name}\` RENAME KEY \`${(diff.src as NonPrimaryKey).key_name}\``
+            + ` TO \`${(diff.tar as NonPrimaryKey).key_name}\`;`
+          );
+          break;
+        case DifferenceType.PK_MODIFY:
+          trans_ddl.push(`ALTER TABLE \`${tbl_name}\` DROP ${KeyType.PRIMARY_KEY}, ADD ${(diff.tar as PrimaryKey).serialize()};`);
+          break;
+        default:
+          break;
+      }
+    })
+    return trans_ddl;
   }
 
   /**
@@ -128,7 +169,7 @@ export class Keys implements Appender<BaseKey>, Comparer<Keys, BaseKey> {
   }
 }
 
-export abstract class BaseKey implements Equaler<BaseKey> {
+export abstract class BaseKey implements Equaler<BaseKey>, Serializer {
   key_type: KeyType;
   key_part: Array<String>;
   index_ds: IndexDS;
@@ -150,10 +191,12 @@ export abstract class BaseKey implements Equaler<BaseKey> {
   }
 
   public abstract equal(that: BaseKey): boolean;
+
+  public abstract serialize(): string;
 }
 
 
-export class PrimaryKey extends BaseKey implements Equaler<PrimaryKey> {
+export class PrimaryKey extends BaseKey implements Equaler<PrimaryKey>, Serializer {
   constructor(key_part: Array<String>, index_ds = IndexDS.BTREE, key_options: KeyOptions) {
     super(KeyType.PRIMARY_KEY, key_part, index_ds, key_options);
   }
@@ -166,10 +209,14 @@ export class PrimaryKey extends BaseKey implements Equaler<PrimaryKey> {
       && (!settings.options || settings.options && this.key_options.equal(that.key_options))
     )
   }
+
+  public serialize(): string {
+    return `PRIMARY KEY (${composeKeyPart(this.key_part)}) ${this.key_options.serialize()}`;
+  }
 }
 
 
-export class NonPrimaryKey extends BaseKey implements Equaler<NonPrimaryKey> {
+export class NonPrimaryKey extends BaseKey implements Equaler<NonPrimaryKey>, Serializer {
   key_name: String;
 
   constructor(key_type: KeyType, key_name: String, key_part: Array<String>, index_ds = IndexDS.BTREE, key_options: KeyOptions) {
@@ -187,12 +234,20 @@ export class NonPrimaryKey extends BaseKey implements Equaler<NonPrimaryKey> {
       && (!nk_settings.name || nk_settings.name && this.key_name == that.key_name)
     )
   }
+
+  public serialize(): string {
+    return `KEY \`${this.key_name}\` (${composeKeyPart(this.key_part)}) ${this.key_options.serialize()}`;
+  }
 }
 
 
-export class UniqueKey extends NonPrimaryKey {
+export class UniqueKey extends NonPrimaryKey implements Serializer {
   constructor(key_name: String, key_part: Array<String>, index_ds = IndexDS.BTREE, key_options: KeyOptions) {
     super(KeyType.UNIQUE_KEY, key_name, key_part, index_ds, key_options);
+  }
+
+  public serialize(): string {
+    return `UNIQUE ${super.serialize()}`;
   }
 }
 
@@ -203,7 +258,7 @@ export class NormalKey extends NonPrimaryKey {
   }
 }
 
-export class KeyOptions implements Equaler<KeyOptions> {
+export class KeyOptions implements Equaler<KeyOptions>, Serializer {
   comment: String;
 
   constructor(comment: String = "") {
@@ -215,5 +270,9 @@ export class KeyOptions implements Equaler<KeyOptions> {
     return (
       (!settings.comment || settings.comment && this.comment == that.comment)
     );
+  }
+
+  public serialize(): string {
+    return `COMMENT '${this.comment}'`;
   }
 }
