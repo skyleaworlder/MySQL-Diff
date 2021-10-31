@@ -86,8 +86,8 @@ test('compare constraint', () => {
     CONSTRAINT `test_index_ibfk_2` FOREIGN KEY (`d_id`) REFERENCES `test_datacolumn` (`id`) ON DELETE CASCADE\n\
   );";
 
-  let tbl_a = processTable(splitSQL(input_1));
-  let tbl_b = processTable(splitSQL(input_2));
+  let [tbl_a, ] = processTable(splitSQL(input_1));
+  let [tbl_b, ] = processTable(splitSQL(input_2));
   let diffs = tbl_a.constraints.compareTo(tbl_b.constraints);
   let ddl = tbl_a.constraints.transform(tbl_a.table_name, diffs);
   console.log(ddl);
