@@ -9,21 +9,47 @@ import { fetchKeyType, fetchKeyName, fetchKeyPart, unmarshalKeyOptions } from "@
 import { fetchConstraintConditions, fetchConstraintName, fetchConstraintType, fetchFkConstraintCols, fetchFkConstraintOn, fetchFkConstraintRefTblCols, fetchFkConstraintRefTblName } from "@/util/Constraint";
 import { removeArmor } from "@/util/Common";
 import { fetchDataColumnName, fetchDataColumnOptions, fetchDataColumnType } from "@/util/DataColumn";
+import { DDL } from "@/model/DDL";
 
-export function processTable(table_ddl: Array<String>): Table {
+export function processDDL(ddl: Array<String>): DDL {
+  let tables: Array<Table> = [];
+
+  for (let index = 0; index < ddl.length; index++) {
+    const line = ddl[index];
+    if (line.trimLeft().startsWith("--")) {
+      continue;
+    }
+
+    if (line.trimLeft().startsWith("CREATE TABLE")) {
+      let table: Table;
+      [table, index] = processTable(ddl, index);
+      tables.push(table);
+      continue;
+    }
+  }
+  return new DDL(tables);
+}
+
+export function processTable(table_ddl: Array<String>, start: number = 0): [Table, number] {
   let table_name: String = "";
   let columns: Array<DataColumn> = [];
   let keys: Array<BaseKey> = [];
   let constraints: Array<BaseConstraint> = [];
 
-  for (let index = 0; index < table_ddl.length; index++) {
+  let index: number = start;
+  for (; index < table_ddl.length; index++) {
     const line = table_ddl[index];
     if (line.trimLeft().startsWith(")") && line.trimRight().endsWith(";")) {
       break;
     }
 
+    // about comments
+    if (line.trimLeft().startsWith("--")) {
+      continue;
+    }
+
     // about table name
-    const create_table_pos = line.toUpperCase().indexOf("CREATE TABLE")
+    const create_table_pos = line.toUpperCase().indexOf("CREATE TABLE");
     if (create_table_pos >= 0) {
       table_name = fetchTableName(line);
       continue;
@@ -46,7 +72,7 @@ export function processTable(table_ddl: Array<String>): Table {
     // about data column
     columns.push(processDataColumn(line));
   }
-  return new Table(table_name, columns, keys, constraints);
+  return [new Table(table_name, columns, keys, constraints), index];
 }
 
 
