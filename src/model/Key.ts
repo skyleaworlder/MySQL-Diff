@@ -5,7 +5,7 @@ import { equalArray, equalStringArrayStrict } from "@/util/Common";
 import { Difference } from "@/model/Difference";
 import { composePrimaryKeyName } from "@/util/Key";
 
-export class Keys implements Appender<BaseKey>, Comparer<Keys> {
+export class Keys implements Appender<BaseKey>, Comparer<Keys, BaseKey> {
   keys: Map<String, BaseKey>;
 
   constructor() {

@@ -1,9 +1,9 @@
 import { DifferenceType, StorageType } from "@/model/Enum";
-import { Appender, Comparer, Equaler } from "./Common";
-import { Difference } from "./Difference";
+import { Appender, Comparer, Equaler, Transformer } from "@/model/Common";
+import { Difference } from "@/model/Difference";
 import { table } from "../../mysql-diff-settings.json";
 
-export class DataColumns implements Appender<DataColumn>, Comparer<DataColumns> {
+export class DataColumns implements Appender<DataColumn>, Comparer<DataColumns, DataColumn> {
   data_columns: Map<String, DataColumn>;
 
   constructor() {

@@ -11,12 +11,12 @@ export interface Appender<T> {
 
 
 /**
- * Comparer<T>
+ * Comparer<Container, Elements>
  * 所有 data model 都要实现的接口。因为所有 model 都是可以比较的。
  * table / column / key / constraint 都需要支持。
  */
-export interface Comparer<T> {
-  compareTo(that: T): Array<Difference<any>>;
+export interface Comparer<Container, Element> {
+  compareTo(that: Container): Array<Difference<Element>>;
 }
 
 
@@ -34,5 +34,6 @@ export interface Equaler<T> {
  * 最后 DDL 语句的输出。
  */
 export interface Transformer<T> {
-  transform(difference: Difference<T>): Array<String>;
+  transform(difference: Difference<Array<T>>): Array<String>;
 }
+
