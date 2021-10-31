@@ -97,3 +97,15 @@ export function unmarshalKeyOptions(ddl: String): KeyOptions {
 export function composePrimaryKeyName(pk: PrimaryKey): string {
   return (KeyType.PRIMARY_KEY + " " + pk.key_part.reduce((prev, cur) => (prev.toString() + cur)));
 }
+
+
+/**
+ * composeKeyPart
+ * ["name_a", "name_b", "name_c"...] => "`name_a`, `name_b`, `name_c`..."
+ * @param key_part 传入的 key_part，或者 ref_col 等字段
+ */
+export function composeKeyPart(key_part: Array<String>): string {
+  return key_part
+    .map((elem) => (`\`${elem}\``))
+    .reduce((prev, cur) => (prev + `, ${cur}`));
+}
