@@ -1,4 +1,6 @@
+import { processTable } from "@/lexer/Processor";
 import { ConstraintType } from "@/model/Enum";
+import { splitSQL } from "@/util/Common";
 import { fetchConstraintConditions, fetchConstraintName, fetchConstraintType, fetchFkConstraintCols, fetchFkConstraintOn, fetchFkConstraintRefTblCols, fetchFkConstraintRefTblName } from "@/util/Constraint";
 
 test('fetch constraint', () => {
@@ -45,6 +47,7 @@ test('fetch constraint', () => {
   })
 })
 
+
 test('fetch foreign key constraint on statement', () => {
   let res: Array<String>;
   let test_case = [
@@ -53,5 +56,40 @@ test('fetch foreign key constraint on statement', () => {
   ]
   test_case.forEach(t_case => {
     console.log(fetchFkConstraintOn(t_case.input));
+  })
+})
+
+
+test('compare constraint', () => {
+  let input_1 = "CREATE TABLE `tbl_a` (\n\
+    `c1` int DEFAULT NULL,\n\
+    `c2` int DEFAULT NULL,\n\
+    `c3` int DEFAULT NULL,\n\
+    `c_id` int NOT NULL COMMENT 'c_id',\n\
+    `d_id` int NOT NULL,\n\
+    CONSTRAINT `test_constraint_chk_2` CHECK ((`c3` < 100)),\n\
+    CONSTRAINT `test_constraint_chk_3` CHECK ((`c1` <> `c2`)),\n\
+    CONSTRAINT `test_constraint_chk_4` CHECK ((`c1` > `c3`)),\n\
+    CONSTRAINT `test_index_ibfk_1` FOREIGN KEY (`c_id`, `d_id`) REFERENCES `test_datacolumn` (`c_id`, `id`) ON DELETE CASCADE\n\
+  );";
+  let input_2 = "CREATE TABLE `test_constraint` (\n\
+    `c1` int DEFAULT NULL,\n\
+    `c2` int DEFAULT NULL,\n\
+    `c3` int DEFAULT NULL,\n\
+    `c_id` int NOT NULL COMMENT 'c_id',\n\
+    `d_id` int NOT NULL,\n\
+    CONSTRAINT `c1_nonzero` CHECK ((`c1` <> 0)),\n\
+    CONSTRAINT `test_constraint_chk_2` CHECK ((`c3` < 100)),\n\
+    CONSTRAINT `test_constraint_chk_3` CHECK ((`c1` <> `id`)),\n\
+    CONSTRAINT `test_constraint_chk_5` CHECK ((`c1` > `c3`)),\n\
+    CONSTRAINT `test_index_ibfk_1` FOREIGN KEY (`c_id`) REFERENCES `test_datacolumn` (`c_id`) ON DELETE CASCADE,\n\
+    CONSTRAINT `test_index_ibfk_2` FOREIGN KEY (`d_id`) REFERENCES `test_datacolumn` (`id`) ON DELETE CASCADE\n\
+  );";
+
+  let tbl_a = processTable(splitSQL(input_1));
+  let tbl_b = processTable(splitSQL(input_2));
+  let diffs = tbl_a.constraints.compareTo(tbl_b.constraints);
+  diffs.forEach(diff => {
+    console.log(diff);
   })
 })
