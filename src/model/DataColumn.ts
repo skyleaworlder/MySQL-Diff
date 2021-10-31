@@ -1,9 +1,9 @@
 import { DifferenceType, StorageType } from "@/model/Enum";
-import { Appender, Comparer, Equaler, Transformer } from "@/model/Common";
+import { Appender, Comparer, Equaler, Serializer, Transformer } from "@/model/Common";
 import { Difference } from "@/model/Difference";
 import { table } from "../../mysql-diff-settings.json";
 
-export class DataColumns implements Appender<DataColumn>, Comparer<DataColumns, DataColumn> {
+export class DataColumns implements Appender<DataColumn>, Comparer<DataColumns, DataColumn>, Transformer<DataColumn> {
   data_columns: Map<String, DataColumn>;
 
   constructor() {
@@ -63,10 +63,30 @@ export class DataColumns implements Appender<DataColumn>, Comparer<DataColumns, 
     })
     return cols_have_diff;
   }
+
+  public transform(tbl_name: String, differences: Array<Difference<DataColumn>>): Array<String> {
+    let trans_ddl: Array<String> = [];
+    differences.forEach(diff => {
+      switch (diff.type) {
+        case DifferenceType.COL_ADD:
+          trans_ddl.push(`ALTER TABLE \`${tbl_name}\` ADD COLUMN ${(diff.tar as DataColumn).serialize()};`);
+          break;
+        case DifferenceType.COL_DROP:
+          trans_ddl.push(`ALTER TABLE \`${tbl_name}\` DROP COLUMN \`${(diff.src as DataColumn).col_name}\`;`);
+          break;
+        case DifferenceType.COL_MODIFY:
+          trans_ddl.push(`ALTER TABLE \`${tbl_name}\` MODIFY COLUMN ${(diff.tar as DataColumn).serialize()};`);
+          break;
+        default:
+          break;
+      }
+    });
+    return trans_ddl;
+  }
 }
 
 
-export class DataColumn implements Equaler<DataColumn> {
+export class DataColumn implements Equaler<DataColumn>, Serializer {
   col_name: String;
   col_data_type: String;
 
@@ -86,10 +106,14 @@ export class DataColumn implements Equaler<DataColumn> {
       && (!settings.data_options || settings.data_options && this.col_options.equal(that.col_options))
     );
   }
+
+  public serialize(): string {
+    return `\`${this.col_name}\` ${this.col_data_type} ${this.col_options.serialize()}`.trim();
+  }
 }
 
 
-export class DataColumnOptions implements Equaler<DataColumnOptions> {
+export class DataColumnOptions implements Equaler<DataColumnOptions>, Serializer {
   not_null: Boolean;
   default_val: any;
   visible: Boolean;
@@ -113,7 +137,7 @@ export class DataColumnOptions implements Equaler<DataColumnOptions> {
   }
 
   /**
-   * equal
+   * equal is to implement interface Equaler
    */
   public equal(that: DataColumnOptions): boolean {
     const settings = table.column.data_options;
@@ -126,5 +150,17 @@ export class DataColumnOptions implements Equaler<DataColumnOptions> {
       && (!settings.storage || settings.storage && (this.storage == that.storage))
       && (!settings.visible || settings.visible && (this.visible == that.visible))
     );
+  }
+
+  public serialize(): string {
+    let res = "";
+    res += this.collate == "" ? "" : ` COLLATE ${this.collate} `;
+    res += this.not_null ? " NOT NULL " : "";
+    res += this.storage == StorageType.EMPTY ? "" : ` /*!50606 STORAGE ${this.storage} */ `;
+    res += this.default_val == null ? "" : ` DEFAULT ${this.default_val} `;
+    res += this.visible ? "" : " /*!80023 INVISIBLE */ ";
+    res += this.auto_increment ? " AUTO_INCREMENT " : "";
+    res += ` COMMENT '${this.comment}' `;
+    return res.trim();
   }
 }
