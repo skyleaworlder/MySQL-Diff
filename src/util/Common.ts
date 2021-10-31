@@ -61,11 +61,55 @@ export function getItems(str: String, wrapper: string = "`"): Array<String> {
 }
 
 
+/**
+ * removeArmor 去除名字的 armor
+ * @param str 传入的名字
+ * @param larmor 名字左边的 armor
+ * @param rarmor 名字右边的 armor
+ * @returns 去除 armor 之后的 “名字”
+ */
 export function removeArmor(str: String, larmor: string, rarmor: string): [string, boolean] {
   if (str.startsWith(larmor) && str.endsWith(rarmor)) {
     return [str.slice(larmor.length, str.length - rarmor.length), true];
   }
   return [str.toString(), false];
+}
+
+
+/**
+ * equalArray 看两个一维数组是不是具备相同元素
+ */
+export function equalArray(arr_a: Array<any>, arr_b: Array<any>): boolean {
+  if (arr_a.length != arr_b.length) {
+    return false;
+  }
+  let equal: boolean = true;
+  arr_a.forEach(elem => { equal = equal && (arr_b.indexOf(elem) >= 0) });
+  return equal;
+}
+
+
+/**
+ * equalStringArrayStrict 看两个 String 数组元素内容和顺序是否完全一致
+ */
+export function equalStringArrayStrict(arr_a: Array<String>, arr_b: Array<String>): boolean {
+  if (arr_a.length != arr_b.length) {
+    return false;
+  }
+  for (let i = 0; i < arr_a.length; i++) {
+    if (arr_a[i] != arr_b[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
+/**
+ * splitSQL
+ */
+export function splitSQL(input: String, seq: string = "\n"): Array<String> {
+  return input.split(seq);
 }
 
 
