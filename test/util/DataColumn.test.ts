@@ -1,5 +1,7 @@
+import { processTable } from "@/lexer/Processor"
 import { DataColumnOptions } from "@/model/DataColumn"
 import { StorageType } from "@/model/Enum"
+import { splitSQL } from "@/util/Common"
 import { fetchDataColumnName, fetchDataColumnOptions, fetchDataColumnType } from "@/util/DataColumn"
 
 test('fetch data column', () => {
@@ -19,12 +21,34 @@ test('fetch data column', () => {
   ]
   test_case.forEach(t_case => {
     let words: Array<String> = t_case.input.trimLeft().split(" ");
-    console.log("wordword:", words)
     const data_col_name = fetchDataColumnName(words[0]);
     const data_col_type = fetchDataColumnType(words);
     const data_col_options = fetchDataColumnOptions(words);
     expect(data_col_name).toBe(t_case.expect.name);
     expect(data_col_type).toBe(t_case.expect.type);
     expect(data_col_options).toEqual(t_case.expect.opts);
+  })
+})
+
+
+test("compare datacolumn", () => {
+  let input_1 = "CREATE TABLE `tbl_a` (\n\
+    `id` int NOT NULL AUTO_INCREMENT,\n\
+    `a1` int DEFAULT NULL,\n\
+    `a2` int DEFAULT NULL,\n\
+    `a3` int DEFAULT NULL\n\
+  );";
+  let input_2 = "CREATE TABLE `tbl_b` (\n\
+    `id` int NOT NULL AUTO_INCREMENT,\n\
+    `a1` varchar(63) DEFAULT NULL,\n\
+    `a4` int DEFAULT NULL\n\
+  );";
+
+  let tbl_a = processTable(splitSQL(input_1));
+  let tbl_b = processTable(splitSQL(input_2));
+  console.log(tbl_a, tbl_b);
+  let diffs = tbl_a.columns.compareTo(tbl_b.columns);
+  diffs.forEach(diff => {
+    console.log(diff);
   })
 })
