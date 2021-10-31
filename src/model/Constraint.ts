@@ -1,10 +1,11 @@
 import { ConstraintType, DifferenceType, ReferenceAction, ReferenceOption } from "@/model/Enum";
-import { Appender, Comparer, Equaler } from "@/model/Common";
+import { Appender, Comparer, Equaler, Serializer, Transformer } from "@/model/Common";
 import { Difference } from "@/model/Difference";
 import { table } from "../../mysql-diff-settings.json";
 import { equalArray } from "@/util/Common";
+import { composeKeyPart } from "@/util/Key";
 
-export class Constraints implements Appender<BaseConstraint>, Comparer<Constraints, BaseConstraint> {
+export class Constraints implements Appender<BaseConstraint>, Comparer<Constraints, BaseConstraint>, Transformer<BaseConstraint> {
   constraints: Map<String, BaseConstraint>;
 
   constructor() {
@@ -60,6 +61,29 @@ export class Constraints implements Appender<BaseConstraint>, Comparer<Constrain
     })
     return cons_have_diff;
   }
+
+  public transform(tbl_name: String, differences: Array<Difference<BaseConstraint>>): Array<String> {
+    let trans_ddl: Array<String> = [];
+    differences.forEach(diff => {
+      switch (diff.type) {
+        case DifferenceType.CON_ADD:
+          trans_ddl.push(`ALTER TABLE \`${tbl_name}\` ADD ${(diff.tar as BaseConstraint).serialize()};`);
+          break;
+        case DifferenceType.CON_DROP:
+          trans_ddl.push(`ALTER TABLE \`${tbl_name}\` DROP CONSTRAINT \`${(diff.src as BaseConstraint).constraint_name}\`;`);
+          break;
+        case DifferenceType.CON_MODIFY:
+          trans_ddl.push(
+            `ALTER TABLE \`${tbl_name}\` DROP CONSTRAINT \`${(diff.src as BaseConstraint).constraint_name}\`,`
+            + ` ADD ${(diff.tar as BaseConstraint).serialize()};`
+          );
+          break;
+        default:
+          break;
+      }
+    })
+    return trans_ddl;
+  }
 }
 
 
@@ -67,7 +91,7 @@ export class Constraints implements Appender<BaseConstraint>, Comparer<Constrain
  * BaseConstraint 基类。
  * 并不直接使用。
  */
-export abstract class BaseConstraint implements Equaler<BaseConstraint> {
+export abstract class BaseConstraint implements Equaler<BaseConstraint>, Serializer {
   constraint_name: String;
   constraint_type: ConstraintType;
 
@@ -77,6 +101,8 @@ export abstract class BaseConstraint implements Equaler<BaseConstraint> {
   }
 
   public abstract equal(that: BaseConstraint): boolean;
+
+  public abstract serialize(): string;
 }
 
 
@@ -87,7 +113,7 @@ export abstract class BaseConstraint implements Equaler<BaseConstraint> {
  * @param constraint_name 约束名
  * @param chk_constraint_conditions 约束条件
  */
-export class CheckConstraint extends BaseConstraint implements Equaler<CheckConstraint> {
+export class CheckConstraint extends BaseConstraint implements Equaler<CheckConstraint>, Serializer {
   chk_constraint_conditions: String;
 
   constructor(constraint_name: String, chk_constraint_conditions: String) {
@@ -104,6 +130,10 @@ export class CheckConstraint extends BaseConstraint implements Equaler<CheckCons
       && (!ck_settings.conditions || ck_settings.conditions && (this.chk_constraint_conditions == this.chk_constraint_conditions))
     );
   }
+
+  public serialize(): string {
+    return `CONSTRAINT \`${this.constraint_name}\` CHECK ${this.chk_constraint_conditions}`;
+  }
 }
 
 
@@ -117,7 +147,7 @@ export class CheckConstraint extends BaseConstraint implements Equaler<CheckCons
  * @param fk_constraint_action 触发 ForeignKeyConstraint 的行为
  * @param fk_constraint_option
  */
-export class ForeignKeyConstraint extends BaseConstraint implements Equaler<ForeignKeyConstraint> {
+export class ForeignKeyConstraint extends BaseConstraint implements Equaler<ForeignKeyConstraint>, Serializer {
   fk_constraint_cols: Array<String>;
   fk_constraint_refer_tbl: String;
   fk_constraint_refer_cols: Array<String>;
@@ -150,10 +180,18 @@ export class ForeignKeyConstraint extends BaseConstraint implements Equaler<Fore
       && (!fk_settings.on || fk_settings.on && fk_constraint_on_equal)
     );
   }
+
+  public serialize(): string {
+    let res = `CONSTRAINT \`${this.constraint_name}\``;
+    res += ` FOREIGN KEY (${composeKeyPart(this.fk_constraint_cols)})`;
+    res += ` REFERENCES \`${this.fk_constraint_refer_tbl}\` (${composeKeyPart(this.fk_constraint_refer_cols)})`;
+    this.fk_constraint_on.forEach(on_statement => { res += ` ${on_statement.serialize()} ` });
+    return res.trim();
+  }
 }
 
 
-export class FkConstraintOnStatement implements Equaler<FkConstraintOnStatement> {
+export class FkConstraintOnStatement implements Equaler<FkConstraintOnStatement>, Serializer {
   fk_constraint_action: ReferenceAction;
   fk_constraint_option: ReferenceOption;
 
@@ -168,5 +206,13 @@ export class FkConstraintOnStatement implements Equaler<FkConstraintOnStatement>
       (!settings.action || settings.action && (this.fk_constraint_action == that.fk_constraint_action))
       && (!settings.option || settings.option && (this.fk_constraint_option == that.fk_constraint_option))
     );
+  }
+
+  public serialize(): string {
+    if (this.fk_constraint_action == ReferenceAction.EMPTY
+      || this.fk_constraint_option == ReferenceOption.EMPTY) {
+      return "";
+    }
+    return `ON ${this.fk_constraint_action} ${this.fk_constraint_option}`;
   }
 }
