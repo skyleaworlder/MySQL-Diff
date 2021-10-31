@@ -60,3 +60,13 @@ export enum IndexDS {
   BTREE = "BTREE",
   HASH = "HASH"
 }
+
+
+/**
+ * DifferenceType 是差异的种类，作为 Transformer 生成 SQL 的重要判定条件
+ */
+export enum DifferenceType {
+  COL_ADD, COL_DROP, COL_MODIFY,
+  KEY_ADD, KEY_DROP, KEY_RENAME, KEY_MODIFY, PK_MODIFY,
+  CON_ADD, CON_DROP, CON_MODIFY
+}
