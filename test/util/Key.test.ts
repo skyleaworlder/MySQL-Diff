@@ -58,8 +58,8 @@ test('compare Key', () => {
     KEY `test_index_ibfk_1` (`id`)\n\
   );";
 
-  let tbl_a = processTable(splitSQL(input_1));
-  let tbl_b = processTable(splitSQL(input_2));
+  let [tbl_a, ] = processTable(splitSQL(input_1));
+  let [tbl_b, ] = processTable(splitSQL(input_2));
   let diffs = tbl_a.keys.compareTo(tbl_b.keys);
   let ddl = tbl_a.keys.transform(tbl_b.table_name, diffs);
   console.log(ddl);
