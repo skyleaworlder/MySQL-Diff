@@ -144,6 +144,7 @@ CREATE TABLE `tbl_a` (
   `d_id` int NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`),
+  UNIQUE KEY `nani` (`d_id`, `name`),
   UNIQUE KEY `c_id` (`c_id`,`d_id`),
   KEY `test_index_ibfk_2` (`d_id`)
 );

@@ -1,5 +1,7 @@
+import { processTable } from "@/lexer/Processor";
 import { IndexDS, KeyType } from "@/model/Enum";
 import { KeyOptions } from "@/model/Key";
+import { splitSQL } from "@/util/Common";
 import { fetchKeyName, fetchKeyPart, fetchKeyType, unmarshalKeyOptions } from "@/util/Key";
 
 test('fetch key', () => {
@@ -29,5 +31,37 @@ test('fetch key', () => {
     expect(type).toBe(t_case.expect.type);
     expect(fetchKeyPart(t_case.input)).toEqual(t_case.expect.part);
     expect(unmarshalKeyOptions(t_case.input)).toEqual(t_case.expect.ops);
+  })
+})
+
+
+test('compare Key', () => {
+  let input_1 = "CREATE TABLE `tbl_a` (\n\
+    `id` int NOT NULL AUTO_INCREMENT,\n\
+    `c_id` int NOT NULL COMMENT 'c_id',\n\
+    `name` varchar(62) NOT NULL DEFAULT '',\n\
+    `d_id` int NOT NULL,\n\
+    PRIMARY KEY (`id`),\n\
+    UNIQUE KEY `name` (`name`),\n\
+    UNIQUE KEY `nani` (`d_id`, `name`),\n\
+    KEY `c_id` (`c_id`,`d_id`),\n\
+    KEY `test_index_ibfk_2` (`d_id`)\n\
+  );";
+  let input_2 = "CREATE TABLE `tbl_b` (\n\
+    `c_id` int NOT NULL AUTO_INCREMENT COMMENT 'c_id',\n\
+    `id` int NOT NULL,\n\
+    `name` varchar(62) NOT NULL DEFAULT '',\n\
+    `d_id` int NOT NULL,\n\
+    PRIMARY KEY (`c_id`),\n\
+    KEY `uk_c_id_d_id` (`c_id`,`d_id`),\n\
+    UNIQUE KEY `name` (`d_id`, `name`),\n\
+    KEY `test_index_ibfk_1` (`id`)\n\
+  );";
+
+  let tbl_a = processTable(splitSQL(input_1));
+  let tbl_b = processTable(splitSQL(input_2));
+  let diffs = tbl_a.keys.compareTo(tbl_b.keys);
+  diffs.forEach(diff => {
+    console.log(diff);
   })
 })
