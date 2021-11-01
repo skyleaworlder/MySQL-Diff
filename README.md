@@ -67,6 +67,46 @@ CREATE TABLE `test_constraint` (
 > ]
 ```
 
+### 2. Using HTTP
+
+套了个很傻的壳。
+
+```shell
+> npm run server
+```
+
+请求：
+
+```text
+GET localhost:12315/transform/table HTTP/1.1
+Accept: */*
+Accept-Encoding: gzip, deflate, br
+Connection: keep-alive
+Content-Type: application/json
+
+{
+    "src": "CREATE TABLE `test_constraint` (\n`id` int NOT NULL AUTO_INCREMENT,\n`c1` int DEFAULT NULL,\n`c2` int DEFAULT NULL,\n`c3` int DEFAULT NULL,\nPRIMARY KEY (`id`),\nCONSTRAINT `c1_nonzero` CHECK ((`c1` <> 0)),\nCONSTRAINT `c2_positive` CHECK ((`c2` > 0)),\nCONSTRAINT `test_constraint_chk_1` CHECK ((`c1` > 10)),\nCONSTRAINT `test_constraint_chk_2` CHECK ((`c3` < 100)),\nCONSTRAINT `test_constraint_chk_3` CHECK ((`c1` <> `c2`)),\nCONSTRAINT `test_constraint_chk_4` CHECK ((`c1` > `c3`))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;",
+    "tar": "CREATE TABLE `test_constraint` (\n`c1` int DEFAULT NULL,\n`c2` int DEFAULT NULL,\n`c3` int DEFAULT NULL,\n`c_id` int NOT NULL COMMENT 'c_id',\n`d_id` int NOT NULL,\nCONSTRAINT `test_constraint_chk_2` CHECK ((`c3` < 100)),\nCONSTRAINT `test_constraint_chk_3` CHECK ((`c1` <> `c2`)),\nCONSTRAINT `test_constraint_chk_4` CHECK ((`c1` > `c3`)),\nCONSTRAINT `test_index_ibfk_1` FOREIGN KEY (`c_id`, `d_id`) REFERENCES `test_datacolumn` (`c_id`, `id`) ON DELETE CASCADE\n);"
+}
+```
+
+响应：
+
+```json
+{
+    "res": [
+        "ALTER TABLE `test_constraint` ADD COLUMN `c_id` int NOT NULL COMMENT 'c_id';",
+        "ALTER TABLE `test_constraint` ADD COLUMN `d_id` int NOT NULL COMMENT '';",
+        "ALTER TABLE `test_constraint` DROP COLUMN `id`;",
+        "ALTER TABLE `test_constraint` DROP PRIMARY KEY;",
+        "ALTER TABLE `test_constraint` ADD CONSTRAINT `test_index_ibfk_1` FOREIGN KEY (`c_id`, `d_id`) REFERENCES `test_datacolumn` (`c_id`, `id`) ON DELETE CASCADE;",
+        "ALTER TABLE `test_constraint` DROP CONSTRAINT `c1_nonzero`;",
+        "ALTER TABLE `test_constraint` DROP CONSTRAINT `c2_positive`;",
+        "ALTER TABLE `test_constraint` DROP CONSTRAINT `test_constraint_chk_1`;"
+    ]
+}
+```
+
 ## Feature
 
 ### 1. mysql-diff-settings.json
