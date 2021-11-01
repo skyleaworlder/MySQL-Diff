@@ -156,13 +156,13 @@ export class DataColumnOptions implements Equaler<DataColumnOptions>, Serializer
 
   public serialize(): string {
     let res = "";
-    res += this.collate == "" ? "" : ` COLLATE ${this.collate} `;
-    res += this.not_null ? " NOT NULL " : "";
-    res += this.storage == StorageType.EMPTY ? "" : ` /*!50606 STORAGE ${this.storage} */ `;
-    res += this.default_val == null ? "" : ` DEFAULT ${this.default_val} `;
-    res += this.visible ? "" : " /*!80023 INVISIBLE */ ";
-    res += this.auto_increment ? " AUTO_INCREMENT " : "";
-    res += ` COMMENT '${this.comment}' `;
+    res += this.collate == "" ? "" : ` COLLATE ${this.collate}`;
+    res += this.not_null ? " NOT NULL" : "";
+    res += this.storage == StorageType.EMPTY ? "" : ` /*!50606 STORAGE ${this.storage} */`;
+    res += this.default_val == null ? "" : ` DEFAULT ${this.default_val}`;
+    res += this.visible ? "" : " /*!80023 INVISIBLE */";
+    res += this.auto_increment ? " AUTO_INCREMENT" : "";
+    res += ` COMMENT '${this.comment}'`;
     return res.trim();
   }
 }
