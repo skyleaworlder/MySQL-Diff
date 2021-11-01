@@ -1,14 +1,15 @@
 import { KeyType, IndexDS, DifferenceType } from "@/model/Enum";
-import { Appender, Comparer, Equaler, Serializer, Transformer } from "@/model/Common";
+import { Appender, Comparer, Equaler, Serializer, Transformer, TableContext, TableElement } from "@/model/Common";
 import { table } from "../../mysql-diff-settings.json";
 import { equalArray, equalStringArrayStrict } from "@/util/Common";
 import { Difference } from "@/model/Difference";
 import { composeKeyPart, composePrimaryKeyName } from "@/util/Key";
 
-export class Keys implements Appender<BaseKey>, Comparer<Keys, BaseKey>, Transformer<BaseKey> {
+export class Keys extends TableContext implements Appender<BaseKey>, Comparer<Keys, BaseKey>, Transformer<BaseKey> {
   keys: Map<String, BaseKey>;
 
-  constructor() {
+  constructor(table_name: String) {
+    super(table_name);
     this.keys = new Map<String, BaseKey>();
   }
 
@@ -100,34 +101,34 @@ export class Keys implements Appender<BaseKey>, Comparer<Keys, BaseKey>, Transfo
     return keys_have_diff;
   }
 
-  public transform(tbl_name: String, differences: Array<Difference<BaseKey>>): Array<String> {
+  public transform(differences: Array<Difference<BaseKey>>): Array<String> {
     let trans_ddl: Array<String> = [];
     differences.forEach(diff => {
       switch (diff.type) {
         case DifferenceType.KEY_ADD:
-          trans_ddl.push(`ALTER TABLE \`${tbl_name}\` ADD ${diff.tar?.serialize()};`);
+          trans_ddl.push(`ALTER TABLE \`${this.table_name}\` ADD ${diff.tar?.serialize()};`);
           break;
         case DifferenceType.KEY_DROP:
           if ((diff.src as BaseKey).key_type == KeyType.PRIMARY_KEY) {
-            trans_ddl.push(`ALTER TABLE \`${tbl_name}\` DROP ${KeyType.PRIMARY_KEY};`);
+            trans_ddl.push(`ALTER TABLE \`${this.table_name}\` DROP ${KeyType.PRIMARY_KEY};`);
           } else {
-            trans_ddl.push(`ALTER TABLE \`${tbl_name}\` DROP \`${(diff.src as NonPrimaryKey).key_name}\`;`)
+            trans_ddl.push(`ALTER TABLE \`${this.table_name}\` DROP \`${(diff.src as NonPrimaryKey).key_name}\`;`)
           }
           break;
         case DifferenceType.KEY_MODIFY:
           trans_ddl.push(
-            `ALTER TABLE \`${tbl_name}\` DROP KEY \`${(diff.src as NonPrimaryKey).key_name}\`,`
+            `ALTER TABLE \`${this.table_name}\` DROP KEY \`${(diff.src as NonPrimaryKey).key_name}\`,`
             + ` ADD ${(diff.tar as NonPrimaryKey).serialize()};`
           );
           break;
         case DifferenceType.KEY_RENAME:
           trans_ddl.push(
-            `ALTER TABLE \`${tbl_name}\` RENAME KEY \`${(diff.src as NonPrimaryKey).key_name}\``
+            `ALTER TABLE \`${this.table_name}\` RENAME KEY \`${(diff.src as NonPrimaryKey).key_name}\``
             + ` TO \`${(diff.tar as NonPrimaryKey).key_name}\`;`
           );
           break;
         case DifferenceType.PK_MODIFY:
-          trans_ddl.push(`ALTER TABLE \`${tbl_name}\` DROP ${KeyType.PRIMARY_KEY}, ADD ${(diff.tar as PrimaryKey).serialize()};`);
+          trans_ddl.push(`ALTER TABLE \`${this.table_name}\` DROP ${KeyType.PRIMARY_KEY}, ADD ${(diff.tar as PrimaryKey).serialize()};`);
           break;
         default:
           break;
@@ -169,13 +170,14 @@ export class Keys implements Appender<BaseKey>, Comparer<Keys, BaseKey>, Transfo
   }
 }
 
-export abstract class BaseKey implements Equaler<BaseKey>, Serializer {
+export abstract class BaseKey extends TableElement implements Equaler<BaseKey>, Serializer {
   key_type: KeyType;
   key_part: Array<String>;
   index_ds: IndexDS;
   key_options: KeyOptions;
 
   constructor(key_type: KeyType, key_part: Array<String>, index_ds = IndexDS.BTREE, key_options: KeyOptions) {
+    super();
     this.key_type = key_type;
     this.key_part = key_part;
     this.index_ds = index_ds;

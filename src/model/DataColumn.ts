@@ -1,12 +1,13 @@
 import { DifferenceType, StorageType } from "@/model/Enum";
-import { Appender, Comparer, Equaler, Serializer, Transformer } from "@/model/Common";
+import { Appender, Comparer, Equaler, Serializer, Transformer, TableContext, TableElement } from "@/model/Common";
 import { Difference } from "@/model/Difference";
 import { table } from "../../mysql-diff-settings.json";
 
-export class DataColumns implements Appender<DataColumn>, Comparer<DataColumns, DataColumn>, Transformer<DataColumn> {
+export class DataColumns extends TableContext implements Appender<DataColumn>, Comparer<DataColumns, DataColumn>, Transformer<DataColumn> {
   data_columns: Map<String, DataColumn>;
 
-  constructor() {
+  constructor(table_name: String) {
+    super(table_name);
     this.data_columns = new Map<String, DataColumn>();
   }
 
@@ -64,18 +65,18 @@ export class DataColumns implements Appender<DataColumn>, Comparer<DataColumns, 
     return cols_have_diff;
   }
 
-  public transform(tbl_name: String, differences: Array<Difference<DataColumn>>): Array<String> {
+  public transform(differences: Array<Difference<DataColumn>>): Array<String> {
     let trans_ddl: Array<String> = [];
     differences.forEach(diff => {
       switch (diff.type) {
         case DifferenceType.COL_ADD:
-          trans_ddl.push(`ALTER TABLE \`${tbl_name}\` ADD COLUMN ${(diff.tar as DataColumn).serialize()};`);
+          trans_ddl.push(`ALTER TABLE \`${this.table_name}\` ADD COLUMN ${(diff.tar as DataColumn).serialize()};`);
           break;
         case DifferenceType.COL_DROP:
-          trans_ddl.push(`ALTER TABLE \`${tbl_name}\` DROP COLUMN \`${(diff.src as DataColumn).col_name}\`;`);
+          trans_ddl.push(`ALTER TABLE \`${this.table_name}\` DROP COLUMN \`${(diff.src as DataColumn).col_name}\`;`);
           break;
         case DifferenceType.COL_MODIFY:
-          trans_ddl.push(`ALTER TABLE \`${tbl_name}\` MODIFY COLUMN ${(diff.tar as DataColumn).serialize()};`);
+          trans_ddl.push(`ALTER TABLE \`${this.table_name}\` MODIFY COLUMN ${(diff.tar as DataColumn).serialize()};`);
           break;
         default:
           break;
@@ -86,13 +87,14 @@ export class DataColumns implements Appender<DataColumn>, Comparer<DataColumns, 
 }
 
 
-export class DataColumn implements Equaler<DataColumn>, Serializer {
+export class DataColumn extends TableElement implements Equaler<DataColumn>, Serializer {
   col_name: String;
   col_data_type: String;
 
   col_options: DataColumnOptions;
 
   constructor(col_name: String, col_data_type: String, col_options: DataColumnOptions) {
+    super();
     this.col_name = col_name;
     this.col_data_type = col_data_type;
     this.col_options = col_options;
