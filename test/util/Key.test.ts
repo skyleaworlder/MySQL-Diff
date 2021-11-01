@@ -61,6 +61,6 @@ test('compare Key', () => {
   let [tbl_a, ] = processTable(splitSQL(input_1));
   let [tbl_b, ] = processTable(splitSQL(input_2));
   let diffs = tbl_a.keys.compareTo(tbl_b.keys);
-  let ddl = tbl_a.keys.transform(tbl_b.table_name, diffs);
+  let ddl = tbl_a.keys.transform(diffs);
   console.log(ddl);
 })

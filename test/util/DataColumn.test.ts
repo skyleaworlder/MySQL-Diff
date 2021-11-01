@@ -48,6 +48,6 @@ test("compare datacolumn", () => {
   let [tbl_b, ] = processTable(splitSQL(input_2));
   console.log(tbl_a, tbl_b);
   let diffs = tbl_a.columns.compareTo(tbl_b.columns);
-  let trans = tbl_a.columns.transform(tbl_a.table_name, diffs);
+  let trans = tbl_a.columns.transform(diffs);
   console.log(trans);
 })

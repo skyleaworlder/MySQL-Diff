@@ -89,6 +89,6 @@ test('compare constraint', () => {
   let [tbl_a, ] = processTable(splitSQL(input_1));
   let [tbl_b, ] = processTable(splitSQL(input_2));
   let diffs = tbl_a.constraints.compareTo(tbl_b.constraints);
-  let ddl = tbl_a.constraints.transform(tbl_a.table_name, diffs);
+  let ddl = tbl_a.constraints.transform(diffs);
   console.log(ddl);
 })
