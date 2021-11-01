@@ -1,14 +1,15 @@
 import { ConstraintType, DifferenceType, ReferenceAction, ReferenceOption } from "@/model/Enum";
-import { Appender, Comparer, Equaler, Serializer, Transformer } from "@/model/Common";
+import { Appender, Comparer, Equaler, Serializer, Transformer, TableContext, TableElement } from "@/model/Common";
 import { Difference } from "@/model/Difference";
 import { table } from "../../mysql-diff-settings.json";
 import { equalArray } from "@/util/Common";
 import { composeKeyPart } from "@/util/Key";
 
-export class Constraints implements Appender<BaseConstraint>, Comparer<Constraints, BaseConstraint>, Transformer<BaseConstraint> {
+export class Constraints extends TableContext implements Appender<BaseConstraint>, Comparer<Constraints, BaseConstraint>, Transformer<BaseConstraint> {
   constraints: Map<String, BaseConstraint>;
 
-  constructor() {
+  constructor(table_name: String) {
+    super(table_name);
     this.constraints = new Map<String, BaseConstraint>();
   }
 
@@ -62,19 +63,19 @@ export class Constraints implements Appender<BaseConstraint>, Comparer<Constrain
     return cons_have_diff;
   }
 
-  public transform(tbl_name: String, differences: Array<Difference<BaseConstraint>>): Array<String> {
+  public transform(differences: Array<Difference<BaseConstraint>>): Array<String> {
     let trans_ddl: Array<String> = [];
     differences.forEach(diff => {
       switch (diff.type) {
         case DifferenceType.CON_ADD:
-          trans_ddl.push(`ALTER TABLE \`${tbl_name}\` ADD ${(diff.tar as BaseConstraint).serialize()};`);
+          trans_ddl.push(`ALTER TABLE \`${this.table_name}\` ADD ${(diff.tar as BaseConstraint).serialize()};`);
           break;
         case DifferenceType.CON_DROP:
-          trans_ddl.push(`ALTER TABLE \`${tbl_name}\` DROP CONSTRAINT \`${(diff.src as BaseConstraint).constraint_name}\`;`);
+          trans_ddl.push(`ALTER TABLE \`${this.table_name}\` DROP CONSTRAINT \`${(diff.src as BaseConstraint).constraint_name}\`;`);
           break;
         case DifferenceType.CON_MODIFY:
           trans_ddl.push(
-            `ALTER TABLE \`${tbl_name}\` DROP CONSTRAINT \`${(diff.src as BaseConstraint).constraint_name}\`,`
+            `ALTER TABLE \`${this.table_name}\` DROP CONSTRAINT \`${(diff.src as BaseConstraint).constraint_name}\`,`
             + ` ADD ${(diff.tar as BaseConstraint).serialize()};`
           );
           break;
@@ -91,11 +92,12 @@ export class Constraints implements Appender<BaseConstraint>, Comparer<Constrain
  * BaseConstraint 基类。
  * 并不直接使用。
  */
-export abstract class BaseConstraint implements Equaler<BaseConstraint>, Serializer {
+export abstract class BaseConstraint extends TableElement implements Equaler<BaseConstraint>, Serializer {
   constraint_name: String;
   constraint_type: ConstraintType;
 
   constructor(constraint_name: String, constraint_type: ConstraintType) {
+    super();
     this.constraint_type = constraint_type;
     this.constraint_name = constraint_name;
   }
