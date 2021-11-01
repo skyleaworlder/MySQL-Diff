@@ -34,7 +34,7 @@ export interface Equaler<T> {
  * 最后 DDL 语句的输出。
  */
 export interface Transformer<T> {
-  transform(tbl_name: String, differences: Array<Difference<T>>): Array<String>;
+  transform(differences: Array<Difference<T>>): Array<String>;
 }
 
 
@@ -44,4 +44,23 @@ export interface Transformer<T> {
  */
 export interface Serializer {
   serialize(): string;
+}
+
+
+export class TableContext {
+  table_name: String;
+
+  constructor(table_name: String) {
+    this.table_name = table_name;
+  }
+}
+
+
+export class TableElement  {
+  class_name: String;
+
+  constructor() {
+    this.class_name = "TableElement";
+  }
+
 }
